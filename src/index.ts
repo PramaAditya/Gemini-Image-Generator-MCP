@@ -70,7 +70,7 @@ class NanoBananaMCP {
           },
           {
             name: "generate_image",
-            description: "Generate a NEW image from text prompt. Use this ONLY when creating a completely new image, not when modifying an existing one.",
+            description: "Generate a NEW image from text prompt. Use this ONLY when creating a completely new image, not when modifying an existing one. IMPORTANT: Always use imageSize '1K' (default) for faster generation unless the user explicitly requests '2K' or '4K'.",
             inputSchema: {
               type: "object",
               properties: {
@@ -78,13 +78,27 @@ class NanoBananaMCP {
                   type: "string",
                   description: "Text prompt describing the NEW image to create from scratch",
                 },
+                aspectRatio: {
+                  type: "string",
+                  enum: ["1:1", "9:16", "16:9", "3:4", "4:3", "3:2", "2:3", "5:4", "4:5", "21:9"],
+                  description: "Optional aspect ratio for the generated image",
+                },
+                imageSize: {
+                  type: "string",
+                  enum: ["1K", "2K", "4K"],
+                  description: "Optional image resolution. Default is '1K' for fast generation - ONLY use '2K' or '4K' if user explicitly requests higher quality",
+                },
+                outputPath: {
+                  type: "string",
+                  description: "Optional custom output file path (relative or absolute). If not provided, images are auto-saved to ./generated_imgs/ with timestamp. Use this to save to specific locations or replace existing images.",
+                },
               },
               required: ["prompt"],
             },
           },
           {
             name: "edit_image",
-            description: "Edit a SPECIFIC existing image file, optionally using additional reference images. Use this when you have the exact file path of an image to modify.",
+            description: "Edit a SPECIFIC existing image file, optionally using additional reference images. Use this when you have the exact file path of an image to modify. IMPORTANT: Always use imageSize '1K' (default) for faster generation unless the user explicitly requests '2K' or '4K'.",
             inputSchema: {
               type: "object",
               properties: {
@@ -103,6 +117,20 @@ class NanoBananaMCP {
                   },
                   description: "Optional array of file paths to additional reference images to use during editing (e.g., for style transfer, adding elements, etc.)",
                 },
+                aspectRatio: {
+                  type: "string",
+                  enum: ["1:1", "9:16", "16:9", "3:4", "4:3", "3:2", "2:3", "5:4", "4:5", "21:9"],
+                  description: "Optional aspect ratio for the edited image",
+                },
+                imageSize: {
+                  type: "string",
+                  enum: ["1K", "2K", "4K"],
+                  description: "Optional image resolution. Default is '1K' for fast generation - ONLY use '2K' or '4K' if user explicitly requests higher quality",
+                },
+                outputPath: {
+                  type: "string",
+                  description: "Optional custom output file path (relative or absolute). If not provided, images are auto-saved to ./generated_imgs/ with timestamp. Use this to save to specific locations or replace existing images.",
+                },
               },
               required: ["imagePath", "prompt"],
             },
@@ -118,7 +146,7 @@ class NanoBananaMCP {
           },
           {
             name: "continue_editing",
-            description: "Continue editing the LAST image that was generated or edited in this session, optionally using additional reference images. Use this for iterative improvements, modifications, or changes to the most recent image. This automatically uses the previous image without needing a file path.",
+            description: "Continue editing the LAST image that was generated or edited in this session, optionally using additional reference images. Use this for iterative improvements, modifications, or changes to the most recent image. This automatically uses the previous image without needing a file path. IMPORTANT: Always use imageSize '1K' (default) for faster generation unless the user explicitly requests '2K' or '4K'.",
             inputSchema: {
               type: "object",
               properties: {
@@ -132,6 +160,20 @@ class NanoBananaMCP {
                     type: "string"
                   },
                   description: "Optional array of file paths to additional reference images to use during editing (e.g., for style transfer, adding elements from other images, etc.)",
+                },
+                aspectRatio: {
+                  type: "string",
+                  enum: ["1:1", "9:16", "16:9", "3:4", "4:3", "3:2", "2:3", "5:4", "4:5", "21:9"],
+                  description: "Optional aspect ratio for the edited image",
+                },
+                imageSize: {
+                  type: "string",
+                  enum: ["1K", "2K", "4K"],
+                  description: "Optional image resolution. Default is '1K' for fast generation - ONLY use '2K' or '4K' if user explicitly requests higher quality",
+                },
+                outputPath: {
+                  type: "string",
+                  description: "Optional custom output file path (relative or absolute). If not provided, images are auto-saved to ./generated_imgs/ with timestamp. Use this to save to specific locations or replace existing images.",
                 },
               },
               required: ["prompt"],
@@ -216,12 +258,25 @@ class NanoBananaMCP {
       throw new McpError(ErrorCode.InvalidRequest, "Gemini API token not configured. Use configure_gemini_token first.");
     }
 
-    const { prompt } = request.params.arguments as { prompt: string };
+    const { prompt, aspectRatio, imageSize, outputPath } = request.params.arguments as {
+      prompt: string;
+      aspectRatio?: string;
+      imageSize?: string;
+      outputPath?: string;
+    };
+    
+    // Append aspect ratio to prompt if provided
+    const finalPrompt = aspectRatio ? `${prompt}\nOutput in ${aspectRatio} ratio` : prompt;
     
     try {
       const response = await this.genAI!.models.generateContent({
         model: "gemini-3-pro-image-preview",
-        contents: prompt,
+        config: {
+          imageConfig: {
+            imageSize: imageSize || '1K',
+          } as any,
+        } as any,
+        contents: finalPrompt,
       });
       
       // Process response to extract image data
@@ -229,11 +284,23 @@ class NanoBananaMCP {
       const savedFiles: string[] = [];
       let textContent = "";
       
-      // Get appropriate save directory based on OS
-      const imagesDir = this.getImagesDirectory();
-      
-      // Create directory
-      await fs.mkdir(imagesDir, { recursive: true, mode: 0o755 });
+      // Determine output path
+      let filePath: string;
+      if (outputPath) {
+        // Use custom output path
+        filePath = path.isAbsolute(outputPath) ? outputPath : path.resolve(outputPath);
+        // Create directory for custom path if needed
+        const dir = path.dirname(filePath);
+        await fs.mkdir(dir, { recursive: true, mode: 0o755 });
+      } else {
+        // Use default directory with auto-generated filename
+        const imagesDir = this.getImagesDirectory();
+        await fs.mkdir(imagesDir, { recursive: true, mode: 0o755 });
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const randomId = Math.random().toString(36).substring(2, 8);
+        const fileName = `generated-${timestamp}-${randomId}.png`;
+        filePath = path.join(imagesDir, fileName);
+      }
       
       if (response.candidates && response.candidates[0]?.content?.parts) {
         for (const part of response.candidates[0].content.parts) {
@@ -244,11 +311,6 @@ class NanoBananaMCP {
           
           // Process image data
           if (part.inlineData?.data) {
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const randomId = Math.random().toString(36).substring(2, 8);
-            const fileName = `generated-${timestamp}-${randomId}.png`;
-            const filePath = path.join(imagesDir, fileName);
-            
             const imageBuffer = Buffer.from(part.inlineData.data, 'base64');
             await fs.writeFile(filePath, imageBuffer);
             savedFiles.push(filePath);
@@ -266,6 +328,12 @@ class NanoBananaMCP {
       
       // Build response content
       let statusText = `🎨 Image generated with nano-banana (Gemini 3 Pro Image Preview)!\n\nPrompt: "${prompt}"`;
+      if (aspectRatio) {
+        statusText += `\nAspect Ratio: ${aspectRatio}`;
+      }
+      if (imageSize) {
+        statusText += `\nImage Size: ${imageSize}`;
+      }
       
       if (textContent) {
         statusText += `\n\nDescription: ${textContent}`;
@@ -305,10 +373,13 @@ class NanoBananaMCP {
       throw new McpError(ErrorCode.InvalidRequest, "Gemini API token not configured. Use configure_gemini_token first.");
     }
 
-    const { imagePath, prompt, referenceImages } = request.params.arguments as { 
-      imagePath: string; 
-      prompt: string; 
+    const { imagePath, prompt, referenceImages, aspectRatio, imageSize, outputPath } = request.params.arguments as {
+      imagePath: string;
+      prompt: string;
       referenceImages?: string[];
+      aspectRatio?: string;
+      imageSize?: string;
+      outputPath?: string;
     };
     
     try {
@@ -348,12 +419,18 @@ class NanoBananaMCP {
         }
       }
       
-      // Add the text prompt
-      imageParts.push({ text: prompt });
+      // Add the text prompt with aspect ratio if provided
+      const finalPrompt = aspectRatio ? `${prompt}\nOutput in ${aspectRatio} ratio` : prompt;
+      imageParts.push({ text: finalPrompt });
       
       // Use new API format with multiple images and text
       const response = await this.genAI!.models.generateContent({
         model: "gemini-3-pro-image-preview",
+        config: {
+          imageConfig: {
+            imageSize: imageSize || '1K',
+          } as any,
+        } as any,
         contents: [
           {
             parts: imageParts
@@ -366,9 +443,23 @@ class NanoBananaMCP {
       const savedFiles: string[] = [];
       let textContent = "";
       
-      // Get appropriate save directory
-      const imagesDir = this.getImagesDirectory();
-      await fs.mkdir(imagesDir, { recursive: true, mode: 0o755 });
+      // Determine output path
+      let filePath: string;
+      if (outputPath) {
+        // Use custom output path
+        filePath = path.isAbsolute(outputPath) ? outputPath : path.resolve(outputPath);
+        // Create directory for custom path if needed
+        const dir = path.dirname(filePath);
+        await fs.mkdir(dir, { recursive: true, mode: 0o755 });
+      } else {
+        // Use default directory with auto-generated filename
+        const imagesDir = this.getImagesDirectory();
+        await fs.mkdir(imagesDir, { recursive: true, mode: 0o755 });
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const randomId = Math.random().toString(36).substring(2, 8);
+        const fileName = `edited-${timestamp}-${randomId}.png`;
+        filePath = path.join(imagesDir, fileName);
+      }
       
       // Extract image from response
       if (response.candidates && response.candidates[0]?.content?.parts) {
@@ -379,11 +470,6 @@ class NanoBananaMCP {
           
           if (part.inlineData) {
             // Save edited image
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const randomId = Math.random().toString(36).substring(2, 8);
-            const fileName = `edited-${timestamp}-${randomId}.png`;
-            const filePath = path.join(imagesDir, fileName);
-            
             if (part.inlineData.data) {
               const imageBuffer = Buffer.from(part.inlineData.data, 'base64');
               await fs.writeFile(filePath, imageBuffer);
@@ -405,6 +491,12 @@ class NanoBananaMCP {
       
       // Build response
       let statusText = `🎨 Image edited with nano-banana!\n\nOriginal: ${imagePath}\nEdit prompt: "${prompt}"`;
+      if (aspectRatio) {
+        statusText += `\nAspect Ratio: ${aspectRatio}`;
+      }
+      if (imageSize) {
+        statusText += `\nImage Size: ${imageSize}`;
+      }
       
       if (referenceImages && referenceImages.length > 0) {
         statusText += `\n\nReference images used:\n${referenceImages.map(f => `- ${f}`).join('\n')}`;
@@ -490,9 +582,12 @@ class NanoBananaMCP {
       throw new McpError(ErrorCode.InvalidRequest, "No previous image found. Please generate or edit an image first, then use continue_editing for subsequent edits.");
     }
 
-    const { prompt, referenceImages } = request.params.arguments as { 
-      prompt: string; 
+    const { prompt, referenceImages, aspectRatio, imageSize, outputPath } = request.params.arguments as {
+      prompt: string;
       referenceImages?: string[];
+      aspectRatio?: string;
+      imageSize?: string;
+      outputPath?: string;
     };
 
     // 检查最后的图片文件是否存在
@@ -511,7 +606,10 @@ class NanoBananaMCP {
         arguments: {
           imagePath: this.lastImagePath,
           prompt: prompt,
-          referenceImages: referenceImages
+          referenceImages: referenceImages,
+          aspectRatio: aspectRatio,
+          imageSize: imageSize,
+          outputPath: outputPath
         }
       }
     } as CallToolRequest);

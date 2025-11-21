@@ -13,6 +13,9 @@ A Model Context Protocol (MCP) server that provides AI image generation and edit
 - 🎨 **Generate Images**: Create new images from text descriptions
 - ✏️ **Edit Images**: Modify existing images with text prompts
 - 🔄 **Iterative Editing**: Continue editing the last generated/edited image
+- 📐 **Aspect Ratio Control**: Specify output aspect ratio (1:1, 16:9, 9:16, 3:4, 4:3, 3:2, 2:3, 5:4, 4:5, 21:9)
+- 📏 **Resolution Control**: Choose image quality - 1K (fast), 2K (balanced), or 4K (high detail)
+- 📂 **Custom Output Paths**: Save images to specific locations or replace existing files
 - 🖼️ **Multiple Reference Images**: Use reference images for style transfer and guidance
 - 🌍 **Cross-Platform**: Smart file paths for Windows, macOS, and Linux
 - 🔧 **Easy Setup**: Simple configuration with API key
@@ -146,7 +149,10 @@ npx nano-banana-mcp
 Create a new image from a text prompt.
 ```typescript
 generate_image({
-  prompt: "A futuristic city at night with neon lights"
+  prompt: "A futuristic city at night with neon lights",
+  aspectRatio?: "16:9", // optional: 1:1, 9:16, 16:9, 3:4, 4:3, 3:2, 2:3, 5:4, 4:5, 21:9
+  imageSize?: "2K", // optional: 1K (default, fast), 2K (balanced), 4K (high detail, slower)
+  outputPath?: "./assets/hero-image.png" // optional: custom save location (relative or absolute)
 })
 ```
 
@@ -156,7 +162,10 @@ Edit a specific image file.
 edit_image({
   imagePath: "/path/to/image.png",
   prompt: "Add a rainbow in the sky",
-  referenceImages?: ["/path/to/reference.jpg"] // optional
+  referenceImages?: ["/path/to/reference.jpg"], // optional
+  aspectRatio?: "16:9", // optional: 1:1, 9:16, 16:9, 3:4, 4:3, 3:2, 2:3, 5:4, 4:5, 21:9
+  imageSize?: "2K", // optional: 1K (default, fast), 2K (balanced), 4K (high detail, slower)
+  outputPath?: "./assets/updated-image.png" // optional: custom save location (relative or absolute)
 })
 ```
 
@@ -165,7 +174,10 @@ Continue editing the last generated/edited image.
 ```typescript
 continue_editing({
   prompt: "Make it more colorful",
-  referenceImages?: ["/path/to/style.jpg"] // optional
+  referenceImages?: ["/path/to/style.jpg"], // optional
+  aspectRatio?: "16:9", // optional: 1:1, 9:16, 16:9, 3:4, 4:3, 3:2, 2:3, 5:4, 4:5, 21:9
+  imageSize?: "2K", // optional: 1K (default, fast), 2K (balanced), 4K (high detail, slower)
+  outputPath?: "./assets/final-image.png" // optional: custom save location (relative or absolute)
 })
 ```
 
@@ -211,6 +223,7 @@ The MCP server loads your API key in the following priority order:
 
 ## 📁 File Storage
 
+### Default Behavior
 Images are automatically saved to platform-appropriate locations:
 
 - **All platforms**: `./generated_imgs/` (in current directory)
@@ -220,6 +233,35 @@ File naming convention:
 - Generated images: `generated-[timestamp]-[id].png`
 - Edited images: `edited-[timestamp]-[id].png`
 
+### Custom Output Paths
+Use the `outputPath` parameter to save images to specific locations:
+
+```typescript
+// Save to project assets folder
+generate_image({
+  prompt: "Logo design",
+  outputPath: "./assets/logo.png"
+})
+
+// Replace existing file
+generate_image({
+  prompt: "Updated banner",
+  outputPath: "./public/banner.png" // Will overwrite if exists
+})
+
+// Absolute path
+generate_image({
+  prompt: "Desktop wallpaper",
+  outputPath: "C:/Users/username/Pictures/wallpaper.png"
+})
+```
+
+**Benefits:**
+- 🎯 Save directly to project directories
+- 🔄 Easily replace existing images
+- 📁 Organize images by type/purpose
+- 🤖 Perfect for AI-driven asset generation workflows
+
 ## 🎨 Example Workflows
 
 ### Basic Image Generation
@@ -227,16 +269,31 @@ File naming convention:
 2. `continue_editing` - Refine and improve
 3. `continue_editing` - Add final touches
 
+### High-Quality Image Production
+1. `generate_image` with `imageSize: "1K"` - Quick preview
+2. `continue_editing` - Refine details
+3. `generate_image` with `imageSize: "4K"` - Final high-resolution version
+
+### Portrait Mode Image
+1. `generate_image` with `aspectRatio: "9:16"` and `imageSize: "2K"` - Create vertical portrait
+2. `continue_editing` - Adjust composition
+3. Use for social media stories, mobile wallpapers
+
+### Landscape Panorama
+1. `generate_image` with `aspectRatio: "21:9"` and `imageSize: "4K"` - Create ultra-wide image
+2. `continue_editing` - Fine-tune details
+3. Perfect for desktop wallpapers, banners
+
 ### Style Transfer
 1. `generate_image` - Create base content
 2. `edit_image` - Use reference images for style
 3. `continue_editing` - Fine-tune the result
 
 ### Iterative Design
-1. `generate_image` - Start with a concept
+1. `generate_image` with `imageSize: "1K"` - Quick iterations for concept exploration
 2. `get_last_image_info` - Check current state
 3. `continue_editing` - Make adjustments
-4. Repeat until satisfied
+4. When satisfied, regenerate with `imageSize: "4K"` for final output
 
 ## 🔧 Development
 
