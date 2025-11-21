@@ -3,7 +3,7 @@
     "nano-banana": {
       "command": "node",
       "args": ["/Users/lemon/Code/nano-banana-mcp/dist/index.js"],
-      "description": "Google nano-banana (Gemini 2.5 Flash Image) MCP server for AI image generation and editing"
+      "description": "Google nano-banana (Gemini 3 Pro Image Preview) MCP server for AI image generation and editing"
     }
   }
 }
