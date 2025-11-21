@@ -13,6 +13,9 @@ yarn-error.log*
 *.swo
 *~
 
+.roo/
+generated_imgs/
+
 # Configuration files with sensitive data
 .nano-banana-config.json
 

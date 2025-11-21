@@ -574,24 +574,15 @@ class NanoBananaMCP {
   }
 
   private getImagesDirectory(): string {
-    const platform = os.platform();
+    const cwd = process.cwd();
+    const homeDir = os.homedir();
     
-    if (platform === 'win32') {
-      // Windows: Use Documents folder
-      const homeDir = os.homedir();
-      return path.join(homeDir, 'Documents', 'nano-banana-images');
-    } else {
-      // macOS/Linux: Use current directory or home directory if in system paths
-      const cwd = process.cwd();
-      const homeDir = os.homedir();
-      
-      // If in system directories, use home directory instead
-      if (cwd.startsWith('/usr/') || cwd.startsWith('/opt/') || cwd.startsWith('/var/')) {
-        return path.join(homeDir, 'nano-banana-images');
-      }
-      
-      return path.join(cwd, 'generated_imgs');
+    // If in system directories, use home directory instead
+    if (cwd.startsWith('/usr/') || cwd.startsWith('/opt/') || cwd.startsWith('/var/')) {
+      return path.join(homeDir, 'nano-banana-images');
     }
+    
+    return path.join(cwd, 'generated_imgs');
   }
 
   private async saveConfig(): Promise<void> {

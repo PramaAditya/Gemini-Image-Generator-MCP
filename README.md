@@ -213,9 +213,8 @@ The MCP server loads your API key in the following priority order:
 
 Images are automatically saved to platform-appropriate locations:
 
-- **Windows**: `%USERPROFILE%\\Documents\\nano-banana-images\\`
-- **macOS/Linux**: `./generated_imgs/` (in current directory)
-- **System directories**: `~/nano-banana-images/` (when run from system paths)
+- **All platforms**: `./generated_imgs/` (in current directory)
+- **System directories**: `~/nano-banana-images/` (when run from system paths like `/usr/`, `/opt/`, `/var/`)
 
 File naming convention:
 - Generated images: `generated-[timestamp]-[id].png`
