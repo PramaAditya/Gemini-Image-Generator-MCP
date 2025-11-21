@@ -168,7 +168,7 @@ class IntegrationTester {
         'edit_image',
         'get_configuration_status',
         'GoogleGenerativeAI',
-        'gemini-2.5-flash-image-preview',
+        'gemini-3-pro-image-preview',
       ];
 
       for (const element of requiredElements) {

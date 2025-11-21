@@ -63,10 +63,10 @@ describe('Nano-banana MCP Server', () => {
   describe('Image Generation', () => {
     test('should format generation request correctly', () => {
       const prompt = 'A cute nano-banana in a lab setting';
-      const expectedModel = 'gemini-2.5-flash-image-preview';
+      const expectedModel = 'gemini-3-pro-image-preview';
       
       expect(prompt).toContain('nano-banana');
-      expect(expectedModel).toBe('gemini-2.5-flash-image-preview');
+      expect(expectedModel).toBe('gemini-3-pro-image-preview');
     });
 
     test('should handle successful image generation', async () => {
@@ -205,14 +205,14 @@ describe('Nano-banana MCP Server', () => {
         response: { text: () => 'Generated nano-banana image successfully' },
       });
 
-      const model = (genAI as any).getGenerativeModel({ model: 'gemini-2.5-flash-image-preview' });
+      const model = (genAI as any).getGenerativeModel({ model: 'gemini-3-pro-image-preview' });
       const result = await model.generateContent('a nano-banana in space');
       
       expect((result as any).response.text()).toContain('nano-banana');
 
       // 4. Verify model was called correctly
       expect(mockGetGenerativeModel).toHaveBeenCalledWith({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-3-pro-image-preview',
       });
     });
 
@@ -222,7 +222,7 @@ describe('Nano-banana MCP Server', () => {
 
       try {
         const genAI = new MockGoogleGenerativeAI('test-key');
-        const model = (genAI as any).getGenerativeModel({ model: 'gemini-2.5-flash-image-preview' });
+        const model = (genAI as any).getGenerativeModel({ model: 'gemini-3-pro-image-preview' });
         await model.generateContent('test prompt');
       } catch (error) {
         expect((error as Error).message).toBe('Rate limit exceeded');
@@ -234,7 +234,7 @@ describe('Nano-banana MCP Server', () => {
       });
 
       const genAI = new MockGoogleGenerativeAI('test-key');
-      const model = (genAI as any).getGenerativeModel({ model: 'gemini-2.5-flash-image-preview' });
+      const model = (genAI as any).getGenerativeModel({ model: 'gemini-3-pro-image-preview' });
       const result = await model.generateContent('test prompt');
       
       expect((result as any).response.text()).toBe('Retry successful');
