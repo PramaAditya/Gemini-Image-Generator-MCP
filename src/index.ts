@@ -287,44 +287,10 @@ class NanoBananaMCP {
     };
     
     try {
-      const imageParts: any[] = [];
-      if (referenceImages && referenceImages.length > 0) {
-        for (const refPath of referenceImages) {
-          try {
-            const refBuffer = await fs.readFile(refPath);
-            const refMimeType = this.getMimeType(refPath);
-            const refBase64 = refBuffer.toString('base64');
-            
-            imageParts.push({
-              inlineData: {
-                data: refBase64,
-                mimeType: refMimeType,
-              }
-            });
-          } catch (error) {
-            // Continue with other images if one fails
-            continue;
-          }
-        }
-      }
-      
+      const imageParts = await this.buildReferenceImageParts(referenceImages);
       imageParts.push({ text: prompt });
       
-      const config: any = {
-        imageConfig: {
-          imageSize: imageSize || '1K',
-        }
-      };
-      
-      if (aspectRatio) {
-        config.imageConfig.aspectRatio = aspectRatio;
-      }
-      
-      if (thinkingLevel) {
-        config.thinkingConfig = {
-          thinkingLevel: thinkingLevel
-        };
-      }
+      const config = this.buildGenerationConfig(imageSize, aspectRatio, thinkingLevel);
       
       const response = await this.genAI!.models.generateContent({
         model: "gemini-3.1-flash-image",
@@ -417,6 +383,9 @@ class NanoBananaMCP {
       return { content };
       
     } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
       console.error("Error generating image:", error);
       throw new McpError(
         ErrorCode.InternalError,
@@ -456,44 +425,12 @@ class NanoBananaMCP {
         }
       ];
       
-      // Add reference images if provided
-      if (referenceImages && referenceImages.length > 0) {
-        for (const refPath of referenceImages) {
-          try {
-            const refBuffer = await fs.readFile(refPath);
-            const refMimeType = this.getMimeType(refPath);
-            const refBase64 = refBuffer.toString('base64');
-            
-            imageParts.push({
-              inlineData: {
-                data: refBase64,
-                mimeType: refMimeType,
-              }
-            });
-          } catch (error) {
-            // Continue with other images, don't fail the entire operation
-            continue;
-          }
-        }
-      }
+      const refParts = await this.buildReferenceImageParts(referenceImages);
+      imageParts.push(...refParts);
       
       imageParts.push({ text: prompt });
       
-      const config: any = {
-        imageConfig: {
-          imageSize: imageSize || '1K',
-        }
-      };
-      
-      if (aspectRatio) {
-        config.imageConfig.aspectRatio = aspectRatio;
-      }
-      
-      if (thinkingLevel) {
-        config.thinkingConfig = {
-          thinkingLevel: thinkingLevel
-        };
-      }
+      const config = this.buildGenerationConfig(imageSize, aspectRatio, thinkingLevel);
       
       // Use new API format with multiple images and text
       const response = await this.genAI!.models.generateContent({
@@ -594,6 +531,9 @@ class NanoBananaMCP {
       return { content };
       
     } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
       throw new McpError(
         ErrorCode.InternalError,
         `Failed to edit image: ${error instanceof Error ? error.message : String(error)}`
@@ -720,6 +660,49 @@ class NanoBananaMCP {
         ],
       };
     }
+  }
+
+  private async buildReferenceImageParts(referenceImages?: string[]): Promise<any[]> {
+    const imageParts: any[] = [];
+    if (referenceImages && referenceImages.length > 0) {
+      for (const refPath of referenceImages) {
+        try {
+          const refBuffer = await fs.readFile(refPath);
+          const refMimeType = this.getMimeType(refPath);
+          const refBase64 = refBuffer.toString('base64');
+          
+          imageParts.push({
+            inlineData: {
+              data: refBase64,
+              mimeType: refMimeType,
+            }
+          });
+        } catch (error) {
+          throw new McpError(ErrorCode.InvalidParams, `Failed to load reference image at ${refPath}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+    }
+    return imageParts;
+  }
+
+  private buildGenerationConfig(imageSize?: string, aspectRatio?: string, thinkingLevel?: string): any {
+    const config: any = {
+      imageConfig: {
+        imageSize: imageSize || '1K',
+      }
+    };
+    
+    if (aspectRatio) {
+      config.imageConfig.aspectRatio = aspectRatio;
+    }
+    
+    if (thinkingLevel) {
+      config.thinkingConfig = {
+        thinkingLevel: thinkingLevel
+      };
+    }
+    
+    return config;
   }
 
   private ensureConfigured(): boolean {
