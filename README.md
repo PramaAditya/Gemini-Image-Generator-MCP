@@ -150,8 +150,10 @@ Create a new image from a text prompt.
 ```typescript
 generate_image({
   prompt: "A futuristic city at night with neon lights",
+  referenceImages?: ["/path/to/reference.jpg"], // optional: reference images
   aspectRatio?: "16:9", // optional: 1:1, 9:16, 16:9, 3:4, 4:3, 3:2, 2:3, 5:4, 4:5, 21:9
   imageSize?: "2K", // optional: 1K (default, fast), 2K (balanced), 4K (high detail, slower)
+  thinkingLevel?: "HIGH", // optional: e.g., HIGH, STANDARD
   outputPath?: "./assets/hero-image.png" // optional: custom save location (relative or absolute)
 })
 ```
@@ -165,6 +167,7 @@ edit_image({
   referenceImages?: ["/path/to/reference.jpg"], // optional
   aspectRatio?: "16:9", // optional: 1:1, 9:16, 16:9, 3:4, 4:3, 3:2, 2:3, 5:4, 4:5, 21:9
   imageSize?: "2K", // optional: 1K (default, fast), 2K (balanced), 4K (high detail, slower)
+  thinkingLevel?: "HIGH", // optional: e.g., HIGH, STANDARD
   outputPath?: "./assets/updated-image.png" // optional: custom save location (relative or absolute)
 })
 ```
@@ -177,6 +180,7 @@ continue_editing({
   referenceImages?: ["/path/to/style.jpg"], // optional
   aspectRatio?: "16:9", // optional: 1:1, 9:16, 16:9, 3:4, 4:3, 3:2, 2:3, 5:4, 4:5, 21:9
   imageSize?: "2K", // optional: 1K (default, fast), 2K (balanced), 4K (high detail, slower)
+  thinkingLevel?: "HIGH", // optional: e.g., HIGH, STANDARD
   outputPath?: "./assets/final-image.png" // optional: custom save location (relative or absolute)
 })
 ```

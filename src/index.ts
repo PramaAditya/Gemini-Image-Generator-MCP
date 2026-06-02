@@ -88,6 +88,17 @@ class NanoBananaMCP {
                   enum: ["1K", "2K", "4K"],
                   description: "Optional image resolution. Default is '1K' for fast generation - ONLY use '2K' or '4K' if user explicitly requests higher quality",
                 },
+                thinkingLevel: {
+                  type: "string",
+                  description: "Optional thinking level for the model (e.g. 'HIGH').",
+                },
+                referenceImages: {
+                  type: "array",
+                  items: {
+                    type: "string"
+                  },
+                  description: "Optional array of file paths to reference images (e.g. for style or subject).",
+                },
                 outputPath: {
                   type: "string",
                   description: "Optional custom output file path (relative or absolute). If not provided, images are auto-saved to ./generated_imgs/ with timestamp. Use this to save to specific locations or replace existing images.",
@@ -126,6 +137,10 @@ class NanoBananaMCP {
                   type: "string",
                   enum: ["1K", "2K", "4K"],
                   description: "Optional image resolution. Default is '1K' for fast generation - ONLY use '2K' or '4K' if user explicitly requests higher quality",
+                },
+                thinkingLevel: {
+                  type: "string",
+                  description: "Optional thinking level for the model (e.g. 'HIGH').",
                 },
                 outputPath: {
                   type: "string",
@@ -170,6 +185,10 @@ class NanoBananaMCP {
                   type: "string",
                   enum: ["1K", "2K", "4K"],
                   description: "Optional image resolution. Default is '1K' for fast generation - ONLY use '2K' or '4K' if user explicitly requests higher quality",
+                },
+                thinkingLevel: {
+                  type: "string",
+                  description: "Optional thinking level for the model (e.g. 'HIGH').",
                 },
                 outputPath: {
                   type: "string",
@@ -258,25 +277,63 @@ class NanoBananaMCP {
       throw new McpError(ErrorCode.InvalidRequest, "Gemini API token not configured. Use configure_gemini_token first.");
     }
 
-    const { prompt, aspectRatio, imageSize, outputPath } = request.params.arguments as {
+    const { prompt, aspectRatio, imageSize, outputPath, referenceImages, thinkingLevel } = request.params.arguments as {
       prompt: string;
       aspectRatio?: string;
       imageSize?: string;
       outputPath?: string;
+      referenceImages?: string[];
+      thinkingLevel?: string;
     };
     
-    // Append aspect ratio to prompt if provided
-    const finalPrompt = aspectRatio ? `${prompt}\nOutput in ${aspectRatio} ratio` : prompt;
-    
     try {
+      const imageParts: any[] = [];
+      if (referenceImages && referenceImages.length > 0) {
+        for (const refPath of referenceImages) {
+          try {
+            const refBuffer = await fs.readFile(refPath);
+            const refMimeType = this.getMimeType(refPath);
+            const refBase64 = refBuffer.toString('base64');
+            
+            imageParts.push({
+              inlineData: {
+                data: refBase64,
+                mimeType: refMimeType,
+              }
+            });
+          } catch (error) {
+            // Continue with other images if one fails
+            continue;
+          }
+        }
+      }
+      
+      imageParts.push({ text: prompt });
+      
+      const config: any = {
+        imageConfig: {
+          imageSize: imageSize || '1K',
+        }
+      };
+      
+      if (aspectRatio) {
+        config.imageConfig.aspectRatio = aspectRatio;
+      }
+      
+      if (thinkingLevel) {
+        config.thinkingConfig = {
+          thinkingLevel: thinkingLevel
+        };
+      }
+      
       const response = await this.genAI!.models.generateContent({
         model: "gemini-3.1-flash-image",
-        config: {
-          imageConfig: {
-            imageSize: imageSize || '1K',
-          } as any,
-        } as any,
-        contents: finalPrompt,
+        config: config,
+        contents: [
+          {
+            parts: imageParts
+          }
+        ],
       });
       
       // Process response to extract image data
@@ -373,13 +430,14 @@ class NanoBananaMCP {
       throw new McpError(ErrorCode.InvalidRequest, "Gemini API token not configured. Use configure_gemini_token first.");
     }
 
-    const { imagePath, prompt, referenceImages, aspectRatio, imageSize, outputPath } = request.params.arguments as {
+    const { imagePath, prompt, referenceImages, aspectRatio, imageSize, outputPath, thinkingLevel } = request.params.arguments as {
       imagePath: string;
       prompt: string;
       referenceImages?: string[];
       aspectRatio?: string;
       imageSize?: string;
       outputPath?: string;
+      thinkingLevel?: string;
     };
     
     try {
@@ -419,18 +477,28 @@ class NanoBananaMCP {
         }
       }
       
-      // Add the text prompt with aspect ratio if provided
-      const finalPrompt = aspectRatio ? `${prompt}\nOutput in ${aspectRatio} ratio` : prompt;
-      imageParts.push({ text: finalPrompt });
+      imageParts.push({ text: prompt });
+      
+      const config: any = {
+        imageConfig: {
+          imageSize: imageSize || '1K',
+        }
+      };
+      
+      if (aspectRatio) {
+        config.imageConfig.aspectRatio = aspectRatio;
+      }
+      
+      if (thinkingLevel) {
+        config.thinkingConfig = {
+          thinkingLevel: thinkingLevel
+        };
+      }
       
       // Use new API format with multiple images and text
       const response = await this.genAI!.models.generateContent({
         model: "gemini-3.1-flash-image",
-        config: {
-          imageConfig: {
-            imageSize: imageSize || '1K',
-          } as any,
-        } as any,
+        config: config,
         contents: [
           {
             parts: imageParts
@@ -582,12 +650,13 @@ class NanoBananaMCP {
       throw new McpError(ErrorCode.InvalidRequest, "No previous image found. Please generate or edit an image first, then use continue_editing for subsequent edits.");
     }
 
-    const { prompt, referenceImages, aspectRatio, imageSize, outputPath } = request.params.arguments as {
+    const { prompt, referenceImages, aspectRatio, imageSize, outputPath, thinkingLevel } = request.params.arguments as {
       prompt: string;
       referenceImages?: string[];
       aspectRatio?: string;
       imageSize?: string;
       outputPath?: string;
+      thinkingLevel?: string;
     };
 
     // 检查最后的图片文件是否存在
@@ -609,7 +678,8 @@ class NanoBananaMCP {
           referenceImages: referenceImages,
           aspectRatio: aspectRatio,
           imageSize: imageSize,
-          outputPath: outputPath
+          outputPath: outputPath,
+          thinkingLevel: thinkingLevel
         }
       }
     } as CallToolRequest);
