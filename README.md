@@ -4,8 +4,8 @@
 
 A Model Context Protocol (MCP) server that provides AI image generation and editing capabilities using Google's Gemini 3 Pro Image Preview API. Generate stunning images, edit existing ones, and iterate on your creations with simple text prompts.
 
-<a href="https://glama.ai/mcp/servers/@ConechoAI/mcp-google-image-generator">
-  <img width="380" height="200" src="https://glama.ai/mcp/servers/@ConechoAI/mcp-google-image-generator/badge" alt="mcp-google-image-generator MCP server" />
+<a href="https://glama.ai/mcp/servers/@prama13/mcp-google-image-generator">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@prama13/mcp-google-image-generator/badge" alt="mcp-google-image-generator MCP server" />
 </a>
 
 ## ✨ Features
@@ -43,7 +43,7 @@ Add this to your Claude Code MCP settings:
   "mcpServers": {
     "mcp-google-image-generator": {
       "command": "npx",
-      "args": ["mcp-google-image-generator"],
+      "args": ["-y", "@prama13/mcp-google-image-generator"],
       "env": {
         "GEMINI_API_KEY": "your-gemini-api-key-here"
       }
@@ -88,7 +88,7 @@ Add to your Cursor MCP configuration:
 {
   "mcp-google-image-generator": {
     "command": "npx",
-    "args": ["mcp-google-image-generator"],
+    "args": ["-y", "@prama13/mcp-google-image-generator"],
     "env": {
       "GEMINI_API_KEY": "your-gemini-api-key-here"
     }
@@ -122,7 +122,7 @@ If you're using a different MCP client, you can configure mcp-google-image-gener
 {
   "mcp-google-image-generator": {
     "command": "npx",
-    "args": ["mcp-google-image-generator"],
+    "args": ["-y", "@prama13/mcp-google-image-generator"],
     "env": {
       "GEMINI_API_KEY": "your-gemini-api-key-here"
     }
@@ -133,12 +133,12 @@ If you're using a different MCP client, you can configure mcp-google-image-gener
 **Method B: System Environment Variable**
 ```bash
 export GEMINI_API_KEY="your-gemini-api-key-here"
-npx mcp-google-image-generator
+npx -y @prama13/mcp-google-image-generator
 ```
 
 **Method C: Using the Configure Tool**
 ```bash
-npx mcp-google-image-generator
+npx -y @prama13/mcp-google-image-generator
 # The server will prompt you to configure when first used
 # This creates a local .mcp-google-image-generator-config.json file
 ```
