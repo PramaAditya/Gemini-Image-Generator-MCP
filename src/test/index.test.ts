@@ -21,7 +21,7 @@ jest.unstable_mockModule('@google/generative-ai', () => ({
   GoogleGenerativeAI: MockGoogleGenerativeAI,
 }));
 
-describe('Nano-banana MCP Server', () => {
+describe('mcp-google-image-generator MCP Server', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -40,7 +40,7 @@ describe('Nano-banana MCP Server', () => {
         geminiApiKey: 'test-api-key-123',
       };
 
-      const configPath = path.join(process.cwd(), '.nano-banana-config.json');
+      const configPath = path.join(process.cwd(), '.mcp-google-image-generator-config.json');
       
       // Test writing config
       await fs.writeFile(configPath, JSON.stringify(testConfig, null, 2));
@@ -62,16 +62,16 @@ describe('Nano-banana MCP Server', () => {
 
   describe('Image Generation', () => {
     test('should format generation request correctly', () => {
-      const prompt = 'A cute nano-banana in a lab setting';
-      const expectedModel = 'gemini-3-pro-image-preview';
+      const prompt = 'A cute mcp-google-image-generator in a lab setting';
+      const expectedModel = 'gemini-3.1-flash-image';
       
-      expect(prompt).toContain('nano-banana');
-      expect(expectedModel).toBe('gemini-3-pro-image-preview');
+      expect(prompt).toContain('mcp-google-image-generator');
+      expect(expectedModel).toBe('gemini-3.1-flash-image');
     });
 
     test('should handle successful image generation', async () => {
       const mockResponse = {
-        text: () => 'Image generated successfully with nano-banana technology',
+        text: () => 'Image generated successfully with mcp-google-image-generator technology',
       };
       
       mockGenerateContent.mockResolvedValueOnce({
@@ -79,7 +79,7 @@ describe('Nano-banana MCP Server', () => {
       });
 
       const result = await mockGenerateContent('test prompt');
-      expect((result as any).response.text()).toContain('nano-banana');
+      expect((result as any).response.text()).toContain('mcp-google-image-generator');
     });
 
     test('should handle generation errors gracefully', async () => {
@@ -202,17 +202,17 @@ describe('Nano-banana MCP Server', () => {
 
       // 3. Generate image
       mockGenerateContent.mockResolvedValueOnce({
-        response: { text: () => 'Generated nano-banana image successfully' },
+        response: { text: () => 'Generated mcp-google-image-generator image successfully' },
       });
 
-      const model = (genAI as any).getGenerativeModel({ model: 'gemini-3-pro-image-preview' });
-      const result = await model.generateContent('a nano-banana in space');
+      const model = (genAI as any).getGenerativeModel({ model: 'gemini-3.1-flash-image' });
+      const result = await model.generateContent('a mcp-google-image-generator in space');
       
-      expect((result as any).response.text()).toContain('nano-banana');
+      expect((result as any).response.text()).toContain('mcp-google-image-generator');
 
       // 4. Verify model was called correctly
       expect(mockGetGenerativeModel).toHaveBeenCalledWith({
-        model: 'gemini-3-pro-image-preview',
+        model: 'gemini-3.1-flash-image',
       });
     });
 
@@ -222,7 +222,7 @@ describe('Nano-banana MCP Server', () => {
 
       try {
         const genAI = new MockGoogleGenerativeAI('test-key');
-        const model = (genAI as any).getGenerativeModel({ model: 'gemini-3-pro-image-preview' });
+        const model = (genAI as any).getGenerativeModel({ model: 'gemini-3.1-flash-image' });
         await model.generateContent('test prompt');
       } catch (error) {
         expect((error as Error).message).toBe('Rate limit exceeded');
@@ -234,7 +234,7 @@ describe('Nano-banana MCP Server', () => {
       });
 
       const genAI = new MockGoogleGenerativeAI('test-key');
-      const model = (genAI as any).getGenerativeModel({ model: 'gemini-3-pro-image-preview' });
+      const model = (genAI as any).getGenerativeModel({ model: 'gemini-3.1-flash-image' });
       const result = await model.generateContent('test prompt');
       
       expect((result as any).response.text()).toBe('Retry successful');

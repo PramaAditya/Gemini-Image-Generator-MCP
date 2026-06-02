@@ -1,9 +1,9 @@
 {
   "mcpServers": {
-    "nano-banana": {
+    "mcp-google-image-generator": {
       "command": "node",
-      "args": ["/Users/lemon/Code/nano-banana-mcp/dist/index.js"],
-      "description": "Google nano-banana (Gemini 3 Pro Image Preview) MCP server for AI image generation and editing"
+      "args": ["dist/index.js"],
+      "description": "Google Gemini 3 Pro Image Preview MCP server for AI image generation and editing"
     }
   }
 }

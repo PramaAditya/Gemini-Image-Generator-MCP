@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Integration test script for nano-banana MCP server
+ * Integration test script for mcp-google-image-generator MCP server
  * This script tests the server functionality without requiring a real Gemini API key
  */
 
@@ -20,7 +20,7 @@ class IntegrationTester {
   private serverProcess: ChildProcess | null = null;
 
   async runAllTests(): Promise<void> {
-    console.log('🚀 Starting nano-banana MCP server integration tests...\n');
+    console.log('🚀 Starting mcp-google-image-generator MCP server integration tests...\n');
 
     try {
       await this.testProjectStructure();
@@ -131,7 +131,7 @@ class IntegrationTester {
         geminiApiKey: 'test-api-key-for-integration-testing',
       };
 
-      const configPath = path.join(process.cwd(), '.nano-banana-config-test.json');
+      const configPath = path.join(process.cwd(), '.mcp-google-image-generator-config-test.json');
       
       // Write test config
       await fs.writeFile(configPath, JSON.stringify(testConfig, null, 2));
@@ -168,7 +168,7 @@ class IntegrationTester {
         'edit_image',
         'get_configuration_status',
         'GoogleGenerativeAI',
-        'gemini-3-pro-image-preview',
+        'gemini-3.1-flash-image',
       ];
 
       for (const element of requiredElements) {
@@ -217,12 +217,12 @@ class IntegrationTester {
     console.log(`📊 Results: ${passed}/${total} tests passed`);
 
     if (passed === total) {
-      console.log('🎉 All integration tests passed! The nano-banana MCP server is ready to use.');
+      console.log('🎉 All integration tests passed! The mcp-google-image-generator MCP server is ready to use.');
       console.log('\n📖 Next steps:');
       console.log('1. Get a Gemini API key from Google AI Studio');
       console.log('2. Configure your MCP client (Claude Desktop, etc.)');
       console.log('3. Use the configure_gemini_token tool to set up your API key');
-      console.log('4. Start generating and editing images with nano-banana!');
+      console.log('4. Start generating and editing images with mcp-google-image-generator!');
     } else {
       console.log('⚠️  Some tests failed. Please fix the issues before using the server.');
       process.exit(1);

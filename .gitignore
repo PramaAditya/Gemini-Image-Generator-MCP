@@ -17,7 +17,7 @@ yarn-error.log*
 generated_imgs/
 
 # Configuration files with sensitive data
-.nano-banana-config.json
+.mcp-google-image-generator-config.json
 
 # Test files
 coverage/

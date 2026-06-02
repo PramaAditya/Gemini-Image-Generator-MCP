@@ -37,7 +37,7 @@ class NanoBananaMCP {
   constructor() {
     this.server = new Server(
       {
-        name: "nano-banana-mcp",
+        name: "mcp-google-image-generator",
         version: "1.0.0",
       },
       {
@@ -56,7 +56,7 @@ class NanoBananaMCP {
         tools: [
           {
             name: "configure_gemini_token",
-            description: "Configure your Gemini API token for nano-banana image generation",
+            description: "Configure your Gemini API token for mcp-google-image-generator image generation",
             inputSchema: {
               type: "object",
               properties: {
@@ -241,7 +241,7 @@ class NanoBananaMCP {
         content: [
           {
             type: "text",
-            text: "✅ Gemini API token configured successfully! You can now use nano-banana image generation features.",
+            text: "✅ Gemini API token configured successfully! You can now use mcp-google-image-generator image generation features.",
           },
         ],
       };
@@ -270,7 +270,7 @@ class NanoBananaMCP {
     
     try {
       const response = await this.genAI!.models.generateContent({
-        model: "gemini-3-pro-image-preview",
+        model: "gemini-3.1-flash-image",
         config: {
           imageConfig: {
             imageSize: imageSize || '1K',
@@ -327,7 +327,7 @@ class NanoBananaMCP {
       }
       
       // Build response content
-      let statusText = `🎨 Image generated with nano-banana (Gemini 3 Pro Image Preview)!\n\nPrompt: "${prompt}"`;
+      let statusText = `🎨 Image generated with mcp-google-image-generator (Gemini 3 Pro Image Preview)!\n\nPrompt: "${prompt}"`;
       if (aspectRatio) {
         statusText += `\nAspect Ratio: ${aspectRatio}`;
       }
@@ -425,7 +425,7 @@ class NanoBananaMCP {
       
       // Use new API format with multiple images and text
       const response = await this.genAI!.models.generateContent({
-        model: "gemini-3-pro-image-preview",
+        model: "gemini-3.1-flash-image",
         config: {
           imageConfig: {
             imageSize: imageSize || '1K',
@@ -490,7 +490,7 @@ class NanoBananaMCP {
       }
       
       // Build response
-      let statusText = `🎨 Image edited with nano-banana!\n\nOriginal: ${imagePath}\nEdit prompt: "${prompt}"`;
+      let statusText = `🎨 Image edited with mcp-google-image-generator!\n\nOriginal: ${imagePath}\nEdit prompt: "${prompt}"`;
       if (aspectRatio) {
         statusText += `\nAspect Ratio: ${aspectRatio}`;
       }
@@ -547,7 +547,7 @@ class NanoBananaMCP {
           sourceInfo = "\n📍 Source: Environment variable (GEMINI_API_KEY)\n💡 This is the most secure configuration method.";
           break;
         case 'config_file':
-          sourceInfo = "\n📍 Source: Local configuration file (.nano-banana-config.json)\n💡 Consider using environment variables for better security.";
+          sourceInfo = "\n📍 Source: Local configuration file (.mcp-google-image-generator-config.json)\n💡 Consider using environment variables for better security.";
           break;
       }
     } else {
@@ -677,7 +677,7 @@ class NanoBananaMCP {
     
     // If in system directories, use home directory instead
     if (cwd.startsWith('/usr/') || cwd.startsWith('/opt/') || cwd.startsWith('/var/')) {
-      return path.join(homeDir, 'nano-banana-images');
+      return path.join(homeDir, 'mcp-google-image-generator-images');
     }
     
     return path.join(cwd, 'generated_imgs');
@@ -685,7 +685,7 @@ class NanoBananaMCP {
 
   private async saveConfig(): Promise<void> {
     if (this.config) {
-      const configPath = path.join(process.cwd(), '.nano-banana-config.json');
+      const configPath = path.join(process.cwd(), '.mcp-google-image-generator-config.json');
       await fs.writeFile(configPath, JSON.stringify(this.config, null, 2));
     }
   }
@@ -706,7 +706,7 @@ class NanoBananaMCP {
     
     // Fallback to config file
     try {
-      const configPath = path.join(process.cwd(), '.nano-banana-config.json');
+      const configPath = path.join(process.cwd(), '.mcp-google-image-generator-config.json');
       const configData = await fs.readFile(configPath, 'utf-8');
       const parsedConfig = JSON.parse(configData);
       
